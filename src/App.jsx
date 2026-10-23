@@ -131,12 +131,122 @@ const COLLECTIONS = [
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY?.trim();
 const AMAZON_ASSOCIATES_TAG = import.meta.env.VITE_AMAZON_ASSOCIATES_TAG?.trim();
 
+const FEATURED_SHOPPING_GUIDES = [
+  {
+    id: "cozy-night",
+    title: "Cozy movie night setup",
+    description:
+      "Blankets, snacks, and the little extras that make a film night feel like an event.",
+    query: "movie night blanket snacks home theater",
+  },
+  {
+    id: "streaming-setup",
+    title: "Home theater upgrades",
+    description:
+      "Level up the room with lighting, speakers, and accessories made for immersive viewing.",
+    query: "home theater speaker lamp streaming setup",
+  },
+  {
+    id: "mini-collection",
+    title: "Curated collector finds",
+    description:
+      "Bonus picks for fans who like to keep the movies close long after the credits roll.",
+    query: "movie poster collector edition memorabilia",
+  },
+];
+
+const DEALS = [
+  {
+    id: "projector",
+    category: "Home theater",
+    title: "Portable projector",
+    price: "$189",
+    description: "Big-screen energy for apartment living rooms, backyard screenings, and weekend marathons.",
+    query: "portable projector for bedroom movie nights",
+  },
+  {
+    id: "soundbar",
+    category: "Audio",
+    title: "Compact soundbar",
+    price: "$149",
+    description: "A simple upgrade that makes dialogue clearer and action scenes feel bigger.",
+    query: "compact soundbar home theater",
+  },
+  {
+    id: "blanket",
+    category: "Cozy picks",
+    title: "Oversized throw blanket",
+    price: "$39",
+    description: "Comfort-first accessories that make a movie night feel indulgent from the first frame.",
+    query: "oversized plush throw blanket movie night",
+  },
+];
+
+const CONTENT_HUBS = [
+  {
+    id: "date-night",
+    label: "Date-night picks",
+    query: "date night movie",
+    description: "Thoughtful, romantic, and crowd-pleasing titles for a slower evening in.",
+  },
+  {
+    id: "rainy-day",
+    label: "Rainy day watches",
+    query: "rainy day movies",
+    description: "Comfort movies and moody picks for a dark, quiet night indoors.",
+  },
+  {
+    id: "cinema-gear",
+    label: "Home theater gear",
+    query: "home theater setup",
+    description: "The accessories that turn a room into a proper movie-night experience.",
+  },
+  {
+    id: "indie-finds",
+    label: "Underrated gems",
+    query: "indie movies",
+    description: "Hidden favorites for people who want something a little less obvious.",
+  },
+];
+
+const EDITORIAL_GUIDES = [
+  {
+    id: "setup-guide",
+    title: "How to build a cozy movie night setup",
+    summary: "The best low-cost upgrades for lighting, sound, and comfort.",
+    query: "cozy movie night setup",
+  },
+  {
+    id: "best-watches",
+    title: "Best movies to watch when you want to feel something",
+    summary: "Thoughtful picks for emotional, reflective nights when the mood matters.",
+    query: "movies to feel something",
+  },
+  {
+    id: "gear-guide",
+    title: "Best home theater gadgets for apartment living",
+    summary: "Compact upgrades that deliver a theater feel without taking over the room.",
+    query: "apartment home theater",
+  },
+];
+
+const buildAmazonSearchUrl = (query, affiliateTag) => {
+  if (!query || !affiliateTag) return null;
+
+  return `https://www.amazon.com/s?${new URLSearchParams({
+    k: query,
+    tag: affiliateTag,
+  })}`;
+};
+
 export default function App() {
   const [query, setQuery] = useState("");
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [movies, setMovies] = useState(SAMPLE_MOVIES);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState("");
 
   const localResults = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -205,6 +315,21 @@ export default function App() {
     };
   }, [query, localResults]);
 
+  const handleNewsletterSubmit = (event) => {
+    event.preventDefault();
+
+    const trimmedEmail = newsletterEmail.trim();
+    if (!trimmedEmail) {
+      setNewsletterStatus("Enter an email to get the latest movie-night deals.");
+      return;
+    }
+
+    setNewsletterStatus(
+      `Thanks! ${trimmedEmail} is now on the list for weekly movie-night finds.`,
+    );
+    setNewsletterEmail("");
+  };
+
   return (
     <main className="app-shell">
       <header className="site-header">
@@ -239,6 +364,22 @@ export default function App() {
             ? "Searching the TMDB movie catalog"
             : "Try a title from our sample collection"}
         </p>
+      </section>
+
+      <section className="shop-promo" aria-labelledby="shop-promo-title">
+        <div>
+          <p className="eyebrow">MONETIZE THE MOOD</p>
+          <h2 id="shop-promo-title">Turn every movie moment into a revenue opportunity.</h2>
+        </div>
+        {AMAZON_ASSOCIATES_TAG ? (
+          <p className="shop-promo-note">
+            Earn commissions on the gear, snacks, and extras that make a movie night feel complete.
+          </p>
+        ) : (
+          <p className="shop-promo-note">
+            Add your Amazon Associates tag in the project environment to enable commission earning links.
+          </p>
+        )}
       </section>
 
       <section className="collections" aria-labelledby="collections-title">
@@ -284,6 +425,151 @@ export default function App() {
             <p>{activeCollection.guide}</p>
           </article>
         )}
+      </section>
+
+      <section className="shop-grid-section" aria-labelledby="shop-grid-title">
+        <div className="shop-grid-header">
+          <p className="eyebrow">SHOP THE VIBE</p>
+          <h2 id="shop-grid-title">Movie-night extras your visitors can actually buy.</h2>
+        </div>
+        <div className="shop-grid">
+          {FEATURED_SHOPPING_GUIDES.map((guide) => {
+            const shopUrl = buildAmazonSearchUrl(guide.query, AMAZON_ASSOCIATES_TAG);
+
+            return (
+              <article key={guide.id} className="shop-card">
+                <span className="shop-badge">Affiliate pick</span>
+                <h3>{guide.title}</h3>
+                <p>{guide.description}</p>
+                {shopUrl ? (
+                  <a
+                    className="shop-link"
+                    href={shopUrl}
+                    target="_blank"
+                    rel="sponsored nofollow noopener noreferrer"
+                  >
+                    Shop this setup <span aria-hidden="true">↗</span>
+                  </a>
+                ) : (
+                  <span className="shop-link muted">Add your affiliate tag to unlock shopping links</span>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="deal-board" aria-labelledby="deal-board-title">
+        <div className="deal-header">
+          <div>
+            <p className="eyebrow">HOT DEALS</p>
+            <h2 id="deal-board-title">Curated finds that pair with a great film.</h2>
+          </div>
+          <a href="https://www.amazon.com/" target="_blank" rel="sponsored nofollow noopener noreferrer" className="deal-link">
+            Browse Amazon picks <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <div className="deal-grid">
+          {DEALS.map((deal) => {
+            const shopUrl = buildAmazonSearchUrl(deal.query, AMAZON_ASSOCIATES_TAG);
+
+            return (
+              <article key={deal.id} className="deal-card">
+                <div className="deal-card-head">
+                  <span className="deal-category">{deal.category}</span>
+                  <span className="deal-price">{deal.price}</span>
+                </div>
+                <h3>{deal.title}</h3>
+                <p>{deal.description}</p>
+                {shopUrl ? (
+                  <a
+                    className="shop-link"
+                    href={shopUrl}
+                    target="_blank"
+                    rel="sponsored nofollow noopener noreferrer"
+                  >
+                    See the deal <span aria-hidden="true">↗</span>
+                  </a>
+                ) : (
+                  <span className="shop-link muted">Add your tag to enable affiliate links</span>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="content-hub" aria-labelledby="content-hub-title">
+        <div className="content-hub-header">
+          <p className="eyebrow">DISCOVER BY INTENT</p>
+          <h2 id="content-hub-title">Guides people actually search for before they pick a movie.</h2>
+        </div>
+        <div className="hub-grid">
+          {CONTENT_HUBS.map((hub) => (
+            <button
+              key={hub.id}
+              type="button"
+              className="hub-card"
+              onClick={() => {
+                setQuery(hub.query);
+                setSelectedCollection(null);
+              }}
+            >
+              <span className="hub-label">{hub.label}</span>
+              <p>{hub.description}</p>
+              <span className="hub-action">Explore picks <span aria-hidden="true">↗</span></span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="editorial-grid-section" aria-labelledby="editorial-grid-title">
+        <div className="editorial-grid-header">
+          <p className="eyebrow">EDITORIAL GUIDES</p>
+          <h2 id="editorial-grid-title">The content that brings in repeat traffic.</h2>
+        </div>
+        <div className="editorial-grid">
+          {EDITORIAL_GUIDES.map((guide) => (
+            <article key={guide.id} className="editorial-card">
+              <span className="editorial-tag">Guide</span>
+              <h3>{guide.title}</h3>
+              <p>{guide.summary}</p>
+              <button
+                type="button"
+                className="editorial-button"
+                onClick={() => {
+                  setQuery(guide.query);
+                  setSelectedCollection(null);
+                }}
+              >
+                Explore this topic <span aria-hidden="true">→</span>
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="newsletter" aria-labelledby="newsletter-title">
+        <div>
+          <p className="eyebrow">THE WEEKLY RECOMMENDATION</p>
+          <h2 id="newsletter-title">Get the best movie-night finds sent straight to your inbox.</h2>
+        </div>
+
+        <form className="newsletter-form" onSubmit={handleNewsletterSubmit}>
+          <label className="newsletter-field">
+            <span className="visually-hidden">Email address</span>
+            <input
+              type="email"
+              value={newsletterEmail}
+              onChange={(event) => setNewsletterEmail(event.target.value)}
+              placeholder="Email address"
+              aria-label="Email address"
+            />
+          </label>
+          <button type="submit">Get deals</button>
+        </form>
+
+        {newsletterStatus && <p className="newsletter-status">{newsletterStatus}</p>}
       </section>
 
       <section className="results" aria-labelledby="results-title">
